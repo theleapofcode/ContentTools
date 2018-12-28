@@ -8096,7 +8096,7 @@
       this._domInput = document.createElement('input');
       this._domInput.setAttribute('class', 'ct-video-dialog__input');
       this._domInput.setAttribute('name', 'url');
-      this._domInput.setAttribute('placeholder', ContentEdit._('Paste YouTube or Vimeo URL') + '...');
+      this._domInput.setAttribute('placeholder', ContentEdit._('Paste Video URL') + '...');
       this._domInput.setAttribute('type', 'text');
       domControlGroup.appendChild(this._domInput);
       this._domButton = this.constructor.createDiv(['ct-control', 'ct-control--text', 'ct-control--insert', 'ct-control--muted']);
@@ -8105,14 +8105,23 @@
       return this._addDOMEventListeners();
     };
 
-    VideoDialog.prototype.preview = function(url) {
+    VideoDialog.prototype.preview = function(embedURL, videoURL) {
       this.clearPreview();
-      this._domPreview = document.createElement('iframe');
-      this._domPreview.setAttribute('frameborder', '0');
-      this._domPreview.setAttribute('height', '100%');
-      this._domPreview.setAttribute('src', url);
-      this._domPreview.setAttribute('width', '100%');
-      return this._domView.appendChild(this._domPreview);
+      if (embedURL) {
+        this._domPreview = document.createElement('iframe');
+        this._domPreview.setAttribute('frameborder', '0');
+        this._domPreview.setAttribute('height', '100%');
+        this._domPreview.setAttribute('src', embedURL);
+        this._domPreview.setAttribute('width', '100%');
+        return this._domView.appendChild(this._domPreview);
+      } else if (videoURL) {
+        this._domPreview = document.createElement('video');
+        this._domPreview.setAttribute('controls', 'true');
+        this._domPreview.setAttribute('height', '100%');
+        this._domPreview.setAttribute('src', videoURL);
+        this._domPreview.setAttribute('width', '100%');
+        return this._domView.appendChild(this._domPreview);
+      }
     };
 
     VideoDialog.prototype.save = function() {
@@ -8121,11 +8130,11 @@
       embedURL = ContentTools.getEmbedVideoURL(videoURL);
       if (embedURL) {
         return this.dispatchEvent(this.createEvent('save', {
-          'url': embedURL
+          'embedURL': embedURL
         }));
       } else {
         return this.dispatchEvent(this.createEvent('save', {
-          'url': videoURL
+          'videoURL': videoURL
         }));
       }
     };
@@ -8163,7 +8172,9 @@
             videoURL = _this._domInput.value.trim();
             embedURL = ContentTools.getEmbedVideoURL(videoURL);
             if (embedURL) {
-              return _this.preview(embedURL);
+              return _this.preview(embedURL, null);
+            } else if (videoURL) {
+              return _this.preview(null, videoURL);
             } else {
               return _this.clearPreview();
             }
@@ -10533,16 +10544,28 @@
       })(this));
       dialog.addEventListener('save', (function(_this) {
         return function(ev) {
-          var applied, index, node, url, video, _ref;
+          var applied, embedURL, index, node, url, video, videoURL, _ref, _ref1;
           url = ev.detail().url;
-          if (url) {
+          embedURL = ev.detail().embedURL;
+          videoURL = ev.detail().videoURL;
+          if (embedURL) {
             video = new ContentEdit.Video('iframe', {
               'frameborder': 0,
               'height': ContentTools.DEFAULT_VIDEO_HEIGHT,
-              'src': url,
+              'src': embedURL,
               'width': ContentTools.DEFAULT_VIDEO_WIDTH
             });
             _ref = _this._insertAt(element), node = _ref[0], index = _ref[1];
+            node.parent().attach(video, index);
+            video.focus();
+          } else if (videoURL) {
+            video = new ContentEdit.Video('video', {
+              'controls': 'true',
+              'height': ContentTools.DEFAULT_VIDEO_HEIGHT,
+              'src': videoURL,
+              'width': ContentTools.DEFAULT_VIDEO_WIDTH
+            });
+            _ref1 = _this._insertAt(element), node = _ref1[0], index = _ref1[1];
             node.parent().attach(video, index);
             video.focus();
           } else {

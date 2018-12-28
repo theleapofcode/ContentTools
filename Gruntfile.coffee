@@ -81,7 +81,6 @@ module.exports = (grunt) ->
         sass:
             options:
                 banner: '/*! <%= pkg.name %> v<%= pkg.version %> by <%= pkg.author.name %> <<%= pkg.author.email %>> (<%= pkg.author.url %>) */'
-                sourcemap: 'none'
 
             build:
                 files:

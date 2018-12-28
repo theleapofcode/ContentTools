@@ -31,7 +31,7 @@ class ContentTools.VideoDialog extends ContentTools.DialogUI
         @_domInput.setAttribute('name', 'url')
         @_domInput.setAttribute(
             'placeholder',
-            ContentEdit._('Paste YouTube or Vimeo URL') + '...'
+            ContentEdit._('Paste Video URL') + '...'
             )
         @_domInput.setAttribute('type', 'text')
         domControlGroup.appendChild(@_domInput)
@@ -49,19 +49,29 @@ class ContentTools.VideoDialog extends ContentTools.DialogUI
         # Add interaction handlers
         @_addDOMEventListeners()
 
-    preview: (url) ->
+    preview: (embedURL, videoURL) ->
         # Preview the specified URL
 
         # Remove any existing preview
         @clearPreview()
 
-        # Insert the preview iframe
-        @_domPreview = document.createElement('iframe')
-        @_domPreview.setAttribute('frameborder', '0')
-        @_domPreview.setAttribute('height', '100%')
-        @_domPreview.setAttribute('src', url)
-        @_domPreview.setAttribute('width', '100%')
-        @_domView.appendChild(@_domPreview)
+        if embedURL
+            # Insert the preview iframe
+            @_domPreview = document.createElement('iframe')
+            @_domPreview.setAttribute('frameborder', '0')
+            @_domPreview.setAttribute('height', '100%')
+            @_domPreview.setAttribute('src', embedURL)
+            @_domPreview.setAttribute('width', '100%')
+            @_domView.appendChild(@_domPreview)
+
+        else if videoURL
+            # Insert the preview video
+            @_domPreview = document.createElement('video')
+            @_domPreview.setAttribute('controls', 'true')
+            @_domPreview.setAttribute('height', '100%')
+            @_domPreview.setAttribute('src', videoURL)
+            @_domPreview.setAttribute('width', '100%')
+            @_domView.appendChild(@_domPreview)
 
     save: () ->
         # Save the video. This method triggers the save method against the
@@ -72,11 +82,11 @@ class ContentTools.VideoDialog extends ContentTools.DialogUI
         videoURL = @_domInput.value.trim()
         embedURL = ContentTools.getEmbedVideoURL(videoURL)
         if embedURL
-            @dispatchEvent(@createEvent('save', {'url': embedURL}))
+            @dispatchEvent(@createEvent('save', {'embedURL': embedURL}))
         else
             # If we can't generate an embed URL trust that the user's knows what
             # they are doing and save with the supplied URL.
-            @dispatchEvent(@createEvent('save', {'url': videoURL}))
+            @dispatchEvent(@createEvent('save', {'videoURL': videoURL}))
 
     show: () ->
         # Show the widget
@@ -126,7 +136,9 @@ class ContentTools.VideoDialog extends ContentTools.DialogUI
                 videoURL = @_domInput.value.trim()
                 embedURL = ContentTools.getEmbedVideoURL(videoURL)
                 if embedURL
-                    @preview(embedURL)
+                    @preview(embedURL, null)
+                else if videoURL
+                    @preview(null, videoURL)
                 else
                     @clearPreview()
 

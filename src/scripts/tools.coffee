@@ -1247,14 +1247,33 @@ class ContentTools.Tools.Video extends ContentTools.Tool
         # Support saving the dialog
         dialog.addEventListener 'save', (ev) =>
             url = ev.detail().url
+            embedURL = ev.detail().embedURL
+            videoURL = ev.detail().videoURL
 
-            if url
-                # Create the new video
+            if embedURL
+                # Create the new video in iframe
                 video = new ContentEdit.Video(
                     'iframe', {
                         'frameborder': 0,
                         'height': ContentTools.DEFAULT_VIDEO_HEIGHT,
-                        'src': url,
+                        'src': embedURL,
+                        'width': ContentTools.DEFAULT_VIDEO_WIDTH
+                        })
+
+                # Find insert position
+                [node, index] = @_insertAt(element)
+                node.parent().attach(video, index)
+
+                # Focus the new video
+                video.focus()
+
+            else if videoURL
+                # Create new video in video tag
+                video = new ContentEdit.Video(
+                    'video', {
+                        'controls': 'true',
+                        'height': ContentTools.DEFAULT_VIDEO_HEIGHT,
+                        'src': videoURL,
                         'width': ContentTools.DEFAULT_VIDEO_WIDTH
                         })
 
